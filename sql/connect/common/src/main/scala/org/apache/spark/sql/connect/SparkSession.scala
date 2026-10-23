@@ -859,6 +859,9 @@ object SparkSession extends SparkSessionCompanion with Logging {
     }
   }
 
+  private[sql] def shouldStartLocalConnectServer(remoteString: Option[String]): Boolean =>
+    remoteString.exists(_.startsWith("local"))
+
   /**
    * Create a new Spark Connect server to connect locally.
    */
@@ -883,8 +886,7 @@ object SparkSession extends SparkSessionCompanion with Logging {
 
     server.synchronized {
       if (server.isEmpty &&
-        (remoteString.exists(_.startsWith("local")) ||
-          (remoteString.isDefined && isAPIModeConnect)) &&
+        shouldStartLocalConnectServer(remoteString) &&
         maybeConnectStartScript.exists(Files.exists(_))) {
         val token = java.util.UUID.randomUUID().toString()
         server = Some {
